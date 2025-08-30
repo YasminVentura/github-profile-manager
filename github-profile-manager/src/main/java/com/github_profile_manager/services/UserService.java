@@ -10,6 +10,9 @@ import com.github_profile_manager.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class UserService {
 
@@ -35,4 +38,10 @@ public class UserService {
 
         return userMapper.toResponseDTO(userRepository.save(user));
     }
+
+    @Transactional
+    public List<UserResponseDTO> getAllUsers() {
+        return userRepository.findAll().stream().map(userMapper::toResponseDTO).collect(Collectors.toList());
+    }
+
 }
