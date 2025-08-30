@@ -1,5 +1,6 @@
 package com.github_profile_manager.exceptions;
 
+import com.github_profile_manager.exceptions.custom.ObjectNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,5 +41,17 @@ public class GlobalExceptionHandler {
                 List.of("The provided data is a duplicate")
         );
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(ObjectNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleValidationException(ObjectNotFoundException ex) {
+        ErrorResponse error = new ErrorResponse(
+                LocalDateTime.now(),
+                "Object not found",
+                HttpStatus.NOT_FOUND.value(),
+                List.of(ex.getMessage())
+        );
+
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
 }
