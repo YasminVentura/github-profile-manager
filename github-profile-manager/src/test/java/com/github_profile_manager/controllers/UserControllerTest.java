@@ -1,13 +1,17 @@
 package com.github_profile_manager.controllers;
 
+import com.github_profile_manager.configs.SecurityConfig;
 import com.github_profile_manager.controllers.dto.UserResponseDTO;
 import com.github_profile_manager.entities.Role;
 import com.github_profile_manager.exceptions.custom.ObjectNotFoundException;
+import com.github_profile_manager.security.JwtUtil;
 import com.github_profile_manager.services.UserService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -20,6 +24,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = UserController.class)
+@Import({SecurityConfig.class, JwtUtil.class})
 class UserControllerTest {
 
     @Autowired
@@ -27,6 +32,15 @@ class UserControllerTest {
 
     @MockitoBean
     private UserService userService;
+
+    @Autowired
+    private JwtUtil jwtUtil;
+    private String token;
+
+    @BeforeEach
+    void setUp() {
+        token = jwtUtil.generateToken("admin");
+    }
 
     @Test
     void designateUserRole_ShouldReturn200() throws Exception {
@@ -42,6 +56,7 @@ class UserControllerTest {
 
         mockMvc.perform(patch("/api/v1/users/1/roles")
                         .param("role", "ADMIN")
+                        .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.login").value("Teste"))
@@ -55,6 +70,7 @@ class UserControllerTest {
 
         mockMvc.perform(patch("/api/v1/users/99/roles")
                         .param("role", "ADMIN")
+                        .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
@@ -69,10 +85,10 @@ class UserControllerTest {
         Mockito.when(userService.getAllUsers()).thenReturn(mockUsers);
 
         mockMvc.perform(get("/api/v1/users/all")
+                        .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].login").value("Pessoa 1"))
                 .andExpect(jsonPath("$[1].login").value("Pessoa 2"));
     }
-
 }
